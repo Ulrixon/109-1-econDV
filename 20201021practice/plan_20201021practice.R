@@ -12,7 +12,7 @@ theme(
 
 rprojroot::is_rstudio_project -> pj
 pj$make_fix_file()->root
-options(rstudio_drake_cache = storr::storr_rds("/home/ryan/Desktop/language/R/109-1-econDV/20201021practice/.practice2", hash_algorithm = "xxhash64"))
+options(rstudio_drake_cache = storr::storr_rds("/mnt/e/githubdoc/Rstudio/109-1-econDV/20201021practice/.practice2", hash_algorithm = "xxhash64"))
 # no params in the frontmatter
 # plan_20201021practice------------
 plan_20201021practice=drake::drake_plan(
@@ -79,7 +79,7 @@ save_gg_unemploymentrate = {
 # > plan ends ------------
 )
 
-mk_plan_20201021practice= function()
+mk_plan_20201021practice= function(...)
 {
 library(readr)
 library(ggplot2)
@@ -95,13 +95,13 @@ theme(
 
 rprojroot::is_rstudio_project -> pj
 pj$make_fix_file()->root
-options(rstudio_drake_cache = storr::storr_rds("/home/ryan/Desktop/language/R/109-1-econDV/20201021practice/.practice2", hash_algorithm = "xxhash64"))
+options(rstudio_drake_cache = storr::storr_rds("/mnt/e/githubdoc/Rstudio/109-1-econDV/20201021practice/.practice2", hash_algorithm = "xxhash64"))
 # no params in the frontmatter
 drake::make(plan_20201021practice,
 cache=drake::drake_cache(
-  path="/home/ryan/Desktop/language/R/109-1-econDV/20201021practice/.practice2"))
+  path="/mnt/e/githubdoc/Rstudio/109-1-econDV/20201021practice/.practice2"),...)
 }
-vis_plan_20201021practice= function()
+vis_plan_20201021practice= function(...)
 {
 library(readr)
 library(ggplot2)
@@ -117,9 +117,15 @@ theme(
 
 rprojroot::is_rstudio_project -> pj
 pj$make_fix_file()->root
-options(rstudio_drake_cache = storr::storr_rds("/home/ryan/Desktop/language/R/109-1-econDV/20201021practice/.practice2", hash_algorithm = "xxhash64"))
+options(rstudio_drake_cache = storr::storr_rds("/mnt/e/githubdoc/Rstudio/109-1-econDV/20201021practice/.practice2", hash_algorithm = "xxhash64"))
 # no params in the frontmatter
 drake::vis_drake_graph(plan_20201021practice,
 cache=drake::drake_cache(
-  path="/home/ryan/Desktop/language/R/109-1-econDV/20201021practice/.practice2"))
+  path="/mnt/e/githubdoc/Rstudio/109-1-econDV/20201021practice/.practice2"),...)
+}
+load_plan_20201021practice= function(...)
+{
+drake::loadd(...,
+cache=drake::drake_cache(
+  path="/mnt/e/githubdoc/Rstudio/109-1-econDV/20201021practice/.practice2"), envir = .GlobalEnv)
 }
