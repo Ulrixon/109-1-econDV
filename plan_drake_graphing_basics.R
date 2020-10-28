@@ -12,7 +12,7 @@ theme(
 
 rprojroot::is_rstudio_project -> pj
 pj$make_fix_file()->root
-options(rstudio_drake_cache = storr::storr_rds("/home/ryan/Desktop/language/R/109-1-econDV/.graphingBasics", hash_algorithm = "xxhash64"))
+options(rstudio_drake_cache = storr::storr_rds("/mnt/e/githubdoc/Rstudio/109-1-econDV/.graphingBasics", hash_algorithm = "xxhash64"))
 # no params in the frontmatter
 # plan_drake_graphing_basics------------
 plan_drake_graphing_basics=drake::drake_plan(
@@ -164,7 +164,7 @@ saveGgline = {
 # > plan ends ------------
 )
 
-mk_plan_drake_graphing_basics= function()
+mk_plan_drake_graphing_basics= function(...)
 {
 library(readr)
 library(ggplot2)
@@ -180,13 +180,13 @@ theme(
 
 rprojroot::is_rstudio_project -> pj
 pj$make_fix_file()->root
-options(rstudio_drake_cache = storr::storr_rds("/home/ryan/Desktop/language/R/109-1-econDV/.graphingBasics", hash_algorithm = "xxhash64"))
+options(rstudio_drake_cache = storr::storr_rds("/mnt/e/githubdoc/Rstudio/109-1-econDV/.graphingBasics", hash_algorithm = "xxhash64"))
 # no params in the frontmatter
 drake::make(plan_drake_graphing_basics,
 cache=drake::drake_cache(
-  path="/home/ryan/Desktop/language/R/109-1-econDV/.graphingBasics"))
+  path="/mnt/e/githubdoc/Rstudio/109-1-econDV/.graphingBasics"),...)
 }
-vis_plan_drake_graphing_basics= function()
+vis_plan_drake_graphing_basics= function(...)
 {
 library(readr)
 library(ggplot2)
@@ -202,9 +202,15 @@ theme(
 
 rprojroot::is_rstudio_project -> pj
 pj$make_fix_file()->root
-options(rstudio_drake_cache = storr::storr_rds("/home/ryan/Desktop/language/R/109-1-econDV/.graphingBasics", hash_algorithm = "xxhash64"))
+options(rstudio_drake_cache = storr::storr_rds("/mnt/e/githubdoc/Rstudio/109-1-econDV/.graphingBasics", hash_algorithm = "xxhash64"))
 # no params in the frontmatter
 drake::vis_drake_graph(plan_drake_graphing_basics,
 cache=drake::drake_cache(
-  path="/home/ryan/Desktop/language/R/109-1-econDV/.graphingBasics"))
+  path="/mnt/e/githubdoc/Rstudio/109-1-econDV/.graphingBasics"),...)
+}
+load_plan_drake_graphing_basics= function(...)
+{
+drake::loadd(...,
+cache=drake::drake_cache(
+  path="/mnt/e/githubdoc/Rstudio/109-1-econDV/.graphingBasics"), envir = .GlobalEnv)
 }
