@@ -173,8 +173,7 @@ gg_unemploymentrate3={
     scale_x_continuous(
       breaks=yearseleted
       ,label=yearseleted
-    )+
-  theme(axis.text.x = element_text(angle = 45,hjust = 1))
+    )
 },
 
 # >> ggTwbunemploymentrate--------------
@@ -186,7 +185,9 @@ ggTwbunemploymentrate= {
       caption="資料出處: 政府開放資料平台https://data.gov.tw/dataset/6637",
       y="失業率",
       x="年份"
-    )+theme_bw()
+    )+theme_bw()  +
+
+  theme(axis.text.x = element_text(angle = 45,hjust = 1))
 },
 
 # >> save_gg_unemploymentrate--------------

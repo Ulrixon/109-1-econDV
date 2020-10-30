@@ -2,7 +2,12 @@
 title: "plan_taiwanunemploymentrate"
 drake_cache: ".practice2"
 output: html_document
-
+params:
+  key: "" # 課綱編號，多個可用 ["key1", "key2"]
+  memberNames: ["莊程順"] # 組員姓名
+  memberIds: ["410873001"] # 學號
+  imgPreName: "unemploymentrate.svg" # ggsave時的檔名
+  imgPostName: "" # svg後製時的檔名
   
 ---
 
@@ -224,8 +229,7 @@ gg_unemploymentrate3={
     scale_x_continuous(
       breaks=yearseleted
       ,label=yearseleted
-    )+
-  theme(axis.text.x = element_text(angle = 45,hjust = 1))
+    )
 }
 
 ```
@@ -242,7 +246,9 @@ ggTwbunemploymentrate= {
       caption="資料出處: 政府開放資料平台https://data.gov.tw/dataset/6637",
       y="失業率",
       x="年份"
-    )+theme_bw()
+    )+theme_bw()  +
+
+  theme(axis.text.x = element_text(angle = 45,hjust = 1))
 }
 ```
 
