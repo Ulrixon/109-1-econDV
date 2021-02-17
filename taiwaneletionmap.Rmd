@@ -1,0 +1,178 @@
+---
+title: "taiwantownmap"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=F)
+library(rmd2drake)
+library(drake)
+
+# If you use git and does not want to track cache folder, put down the following command:
+# set_gitignore(".myCache")
+```
+
+## makecondition
+
+```{r makecondition}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(googledrive)
+library(readr)
+library(ggmap)
+library(osmdata)
+library(ggplot2)
+library(econDV)
+library(sf)
+
+rprojroot::is_rstudio_project -> .pj
+.pj$make_fix_file() -> .root
+
+imageFolder <- file.path(.root(),"img")
+dataFolder <- file.path(.root(),"data")
+
+if(!dir.exists(imageFolder)) dir.create(imageFolder)
+if(!dir.exists(dataFolder)) dir.create(dataFolder)
+
+
+```
+#eletion data
+```{r}
+citylist=list(
+taipei=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(臺北市).xls"),
+newtaipei=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(新北市).xls"),
+Taoyuan=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(桃園市).xls"),
+HsinchuCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(新竹縣).xls"),
+HsinchuCity=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(新竹市).xls"),
+KeelungCity=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(基隆市).xls")
+,
+MiaoliCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(苗栗縣).xls"),
+TaichungCity=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(臺中市).xls"),
+ChanghuaCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(彰化縣).xls"),
+NantouCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(南投縣).xls"),
+YunlinCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(雲林縣).xls"),
+ChiayiCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(嘉義縣).xls"),
+ChiayiCity=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(嘉義市).xls"),
+TainanCity=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(臺南市).xls"),
+KaohsiungCity=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(高雄市).xls"),
+PingtungCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(屏東縣).xls"),
+YilanCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(宜蘭縣).xls"),
+HualienCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(花蓮縣).xls"),
+TaitungCity=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(臺東縣).xls"),
+PenghuCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(澎湖縣).xls"),
+KinmenCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(金門縣).xls"),
+LienchiangCounty=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-2-候選人得票數一覽表(連江縣).xls")
+)
+```
+
+#gragh data
+```{r}
+a=sf::read_sf("/mnt/e/downloads/TOWN_MOI_1091016.shp")
+```
+```{r}
+a=mutate(
+  a,
+  綠得票數=c(1:length(a$COUNTYNAME)),
+  綠得票比例=c(1:length(a$COUNTYNAME))
+)
+```
+
+```{r}
+for (i in 1:22) {
+  
+    citylist[[i]][[4]]=str_replace_all(citylist[[i]][[4]],",","")
+    citylist[[i]][[5]]=str_replace_all(citylist[[i]][[5]],",","")
+  
+}
+for (i in 1:22) {
+  for (j in 1:(length(citylist[[i]][[1]])-5)) {
+    c=str_which(citylist[[i]][[1]][[j+5]],a$TOWNNAME)
+    a$綠得票數[c]=citylist[[i]]$...4[[j+5]]
+    a$綠得票比例[c]=as.double(citylist[[i]]$...4[[j+5]])/as.double(citylist[[i]]$...5[[j+5]])
+}
+  
+}
+
+```
+
+
+#gragh
+```{r}
+colorspace::diverging_hcl(n = 7, h = c(247, 120), c = 100, l = c(30, 90), power = 0.6, register = "Custom-Palette")
+```
+
+```{r}
+  colorspace::scale_fill_continuous_diverging(
+    palette="Custom-Palette") -> scale_fill_election
+scale_fill_election[["labels"]]=c(0,0.2,0.4,0.6,0.8,1)
+scale_fill_election[["breaks"]]=c(-1,-0.6,-0.2,0.2,0.6,1)
+```
+
+```{r}
+a=mutate(
+  a,
+  "民進黨rescale"=scales::rescale(
+    a$綠得票比例,
+    from=c(0,1),
+    to=c(-1,1)
+  )
+)
+```
+
+```{r}
+a=st_set_crs(a,"+proj=longlat +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +no_defs ")
+taiwaneletionmap=
+a%>%
+  st_crop(c(xmin=118,xmax=122,ymin=21,ymax=25.8))%>%
+ggplot()+geom_sf(aes(fill=民進黨rescale),color="white")+scale_fill_election+theme_void()
+taiwaneletionmap[["labels"]][["fill"]]="民進黨得票比例"
+```
+
+
+```{r}
+
+taiwaneletionmap2=taiwaneletionmap+labs(title="臺灣2020總統大選",
+      subtitle = "比例為:蔡英文得票數/有效票數"
+      ,caption = "資料來源:中選會資料庫https://db.cec.gov.tw/histFile?voteCode=20200101P1A1&resourceCode=S1
+      政府資料開放平台https://data.gov.tw/dataset/7441"
+      )
+```
+
+```{r}
+taiwaneletionmap2
+```
+#疊上縣市區域圖層
+```{r}
+a1=sf::read_sf("/mnt/e/downloads/COUNTY_MOI_1090820.shp")
+
+a1=st_crop(a1,c(xmin=118,xmax=122,ymin=21,ymax=25.8))
+taiwaneletionmap3=taiwaneletionmap2+geom_sf(data=a1,alpha=0.3,fill=NA)+geom_sf_text(data=a1,mapping = aes(label=COUNTYNAME),size=5,color="black")
+```
+
+```{r}
+taiwaneletionmap3
+```
+
+
+```{r }
+save_gg_taiwanEconomicGrowth = {
+  destfile = file.path(.root(),"img/taiwaneletionmap3.svg")
+  destDir = dirname(destfile)
+  if(!dir.exists(destDir)) dir.create(destDir)
+  ggsave(
+    
+    taiwaneletionmap3,
+    file=destfile,
+    width=8,
+    height=8
+  )
+  
+}
+```

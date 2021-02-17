@@ -1,0 +1,218 @@
+---
+title: "plan_taiwanBusinessCycles"
+drake_cache: ".myCache"
+params:
+  key: "公Aa-Ⅳ-1"
+  memberGmails: ["mary@gm.ntpu.edu.tw","cook@gmail.com"]
+editor_options: 
+  chunk_output_type: console
+output: html_document
+---
+
+key請由課綱選：
+新課綱：<https://docs.google.com/document/d/1o8UQIpy6GFqCgfUxc47fqyAPuEYrk3FLd7bB1EhYMVg>
+
+memberGmails: 為組員進入google classroom的gmail
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=F)
+library(rmd2drake)
+library(drake)
+
+# If you use git and does not want to track cache folder, put down the following command:
+# set_gitignore(".myCache")
+```
+
+## makecondition
+
+```{r makecondition}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(googledrive)
+library(readr)
+library(ggmap)
+library(osmdata)
+library(ggplot2)
+library(econDV)
+library(sf)
+
+rprojroot::is_rstudio_project -> .pj
+.pj$make_fix_file() -> .root
+
+imageFolder <- file.path(.root(),"img")
+dataFolder <- file.path(.root(),"data")
+
+if(!dir.exists(imageFolder)) dir.create(imageFolder)
+if(!dir.exists(dataFolder)) dir.create(dataFolder)
+
+
+```
+
+
+```{r}
+colorspace::choose_palette(gui = "shiny")
+```
+
+#graph data 已先解壓縮
+```{r}
+a=sf::read_sf("/mnt/e/downloads/COUNTY_MOI_1090820.shp")
+```
+
+
+#fetch data 已先解壓縮
+```{r}
+b=readxl::read_excel("/mnt/e/downloads/總統-各投票所得票明細及概況(Excel檔)/總統-A05-1-候選人得票數一覽表(中　央).xls")
+```
+#整理
+```{r}
+names(b$...2)="宋楚瑜"
+names(b$...3)="韓國瑜"
+names(b$...4)="蔡英文"
+names(b)[[2]]="宋楚瑜"
+names(b)[[3]]="韓國瑜"
+  names(b)[[4]]="蔡英文"
+```
+
+```{r}
+a=mutate(
+  a,
+  "綠得票數"=c(1:22),
+  "綠得票比例"=c(1:22)
+)
+
+
+```
+
+```{r}
+b$蔡英文=str_replace_all(b$蔡英文,",","")
+b$...5=str_replace_all(b$...5,",","")
+```
+
+```{r}
+  for (i in c(1:22)) {
+    c=str_which(b$第15任總統副總統選舉候選人得票數一覽表[[i+5]],a$COUNTYNAME)
+    a$綠得票數[[c]]=b$蔡英文[[i+5]]
+  }
+  for (i in c(1:22)) {
+    c=str_which(b$第15任總統副總統選舉候選人得票數一覽表[[i+5]],a$COUNTYNAME)
+    a$綠得票比例[[c]]=as.double(b$蔡英文[[i+5]])/as.double(b$...5[[i+5]])
+  }
+```
+#graph
+
+
+```{r}
+colorspace::diverging_hcl(n = 7, h = c(247, 120), c = 100, l = c(30, 90), power = 0.6, register = "Custom-Palette")
+```
+
+```{r}
+  colorspace::scale_fill_continuous_diverging(
+    palette="Custom-Palette") -> scale_fill_election
+scale_fill_election[["labels"]]=c(0,0.2,0.4,0.6,0.8,1)
+scale_fill_election[["breaks"]]=c(-1,-0.6,-0.2,0.2,0.6,1)
+```
+
+```{r}
+a=mutate(
+  a,
+  "民進黨rescale"=scales::rescale(
+    a$綠得票比例,
+    from=c(0,1),
+    to=c(-1,1)
+  )
+)
+```
+
+
+
+
+```{r}
+a%>%
+  #rmapshaper::ms_simplify()%>%
+  st_crop(c(xmin=118,xmax=122,ymin=21,ymax=25.8))%>%
+  ggplot()+geom_sf(aes(fill=民進黨rescale),color="white")+
+  geom_sf_text(aes(label = COUNTYNAME), size = 4,check_overlap = F)+
+  geom_sf_text(aes(label = paste0(as.character(round(綠得票比例*100,2)),"%")), size = 4,position = position_nudge(y = -0.08),color="red")+
+scale_fill_election->taiwanmap
+taiwanmap[["labels"]][["fill"]]="民進黨得票比例"
+```
+```{r}
+taiwanmap2=taiwanmap+labs(title="臺灣2020總統大選",
+      subtitle = "比例為:蔡英文得票數/有效票數"
+      ,caption = "資料來源:中選會資料庫https://db.cec.gov.tw/histFile?voteCode=20200101P1A1&resourceCode=S1
+      政府資料開放平台https://data.gov.tw/dataset/7442"
+      )+theme_void()
+```
+
+```{r}
+taiwanmap2
+```
+
+
+
+```{r }
+save_gg_taiwanEconomicGrowth = {
+  destfile = file.path(.root(),"img/taiwanmap.svg")
+  destDir = dirname(destfile)
+  if(!dir.exists(destDir)) dir.create(destDir)
+  ggsave(
+    
+    taiwanmap2,
+    file=destfile,
+    width=8,
+    height=8
+  )
+  
+}
+```
+#疊圖+google地圖
+```{r}
+map <- get_map(location = 'Taiwan', zoom = 7,maptype = "toner-lite",
+  language = "zh-TW")
+```
+```{r}
+ggmap(map)+
+  a%>%
+  #rmapshaper::ms_simplify()%>%
+  st_crop(c(xmin=118,xmax=122,ymin=21,ymax=25.8))%>%
+  
+  geom_sf(mapping=aes(fill=民進黨rescale),color="white",inherit.aes = F,alpha=0.3)+
+  a%>%
+  #rmapshaper::ms_simplify()%>%
+  st_crop(c(xmin=118,xmax=122,ymin=21,ymax=25.8))%>%
+  geom_sf_text(mapping=aes(label = COUNTYNAME), size = 4,check_overlap = F,inherit.aes = F)+
+  a%>%
+  #rmapshaper::ms_simplify()%>%
+  st_crop(c(xmin=118,xmax=122,ymin=21,ymax=25.8))%>%
+  geom_sf_text(mapping=aes(label = paste0(as.character(round(綠得票比例*100,2)),"%")), size = 4,position = position_nudge(y = -0.09),color="red",inherit.aes = F)+
+  scale_fill_election->taiwanmap
+taiwanmap[["labels"]][["fill"]]="民進黨得票比例"
+```
+```{r}
+taiwanmap2=taiwanmap+labs(title="臺灣2020總統大選",
+      subtitle = "比例為:蔡英文得票數/有效票數"
+      ,caption = "資料來源:中選會資料庫https://db.cec.gov.tw/histFile?voteCode=20200101P1A1&resourceCode=S1
+      政府資料開放平台https://data.gov.tw/dataset/7442"
+      )+theme_void()
+```
+
+```{r}
+taiwanmap2
+```
+
+```{r }
+save_gg_taiwanEconomicGrowth = {
+  destfile = file.path(.root(),"img/taiwanmap2.svg")
+  destDir = dirname(destfile)
+  if(!dir.exists(destDir)) dir.create(destDir)
+  ggsave(
+    
+    taiwanmap2,
+    file=destfile,
+    width=8,
+    height=8
+  )
+  
+}
+```

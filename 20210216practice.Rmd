@@ -1,0 +1,78 @@
+---
+title: "20210216pratice"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## makecondition
+
+```{r makecondition}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(googledrive)
+library(readr)
+library(ggmap)
+library(osmdata)
+library(ggplot2)
+library(econDV)
+library(sf)
+
+rprojroot::is_rstudio_project -> .pj
+.pj$make_fix_file() -> .root
+
+imageFolder <- file.path(.root(),"img")
+dataFolder <- file.path(.root(),"data")
+
+if(!dir.exists(imageFolder)) dir.create(imageFolder)
+if(!dir.exists(dataFolder)) dir.create(dataFolder)
+
+
+```
+#fetch data
+```{r}
+#taiwanbbox=getbb("taiwan")
+taiwanbbox=c(xmin=119.263, ymin=21.646, xmax=123, ymax=25.609)%>%
+#newTaipeiBBox <- c(xmin=121.28263, ymin=24.67316, xmax=122.00640, ymax=25.29974)%>%
+opq()%>%
+  add_osm_feature(key="administrative", value="5") %>%
+osmdata::osmdata_sf()->taiwan
+  #osmdata::unname_osmdata_sf()->taiwan
+  
+```
+```{r}
+
+  opq(taiwanbbox)%>%
+  add_osm_feature(key="administrative", value="8") %>%
+osmdata::osmdata_sf()->taiwan2
+  #osmdata::unname_osmdata_sf()->taiwan2
+```
+
+#gragh
+```{r}
+taiwan$osm_lines%>%
+  #rmapshaper::ms_simplify()%>%
+  ggplot()+geom_sf()+geom_sf(taiwan2$osm_lines)
+```
+```{r}
+google=get_map(c(left=118,right=122,bottom=21,top=25.8),maptype = "toner-lite",source = "stamen")
+googlemap=get_map(c(left=118,right=122,bottom=21,top=25.8),maptype = "toner-lite",source = "stamen", language = "zh-TW")
+ggmap(googlemap)
+```
+
+```{r}
+newTaipeiBBox2 <- c(left = 121, bottom = 25, right = 122, top = 25.3)
+get_map(newTaipeiBBox2, maptype = "toner-lite") -> raster_newTaipeiToner
+ggmap(raster_newTaipeiToner)
+```
+
+```{r}
+map <- get_map(location = 'Taiwan', zoom = 7,maptype = "toner-lite",
+  language = "zh-TW")
+ggmap(map)
+```
+
